@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Панель керування Google Sheets</title>
+</head>
+<body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;">
+  <h2>📊 Панель керування Google Sheets</h2>
+  <p>Можливі дії (action):</p>
+  <ul>
+    <li><code>addColumn</code> – додати стовпець із заголовком</li>
+    <li><code>setCellValue</code> – встановити значення в комірку</li>
+    <li><code>readSheet</code> – зчитати всі дані з аркуша</li>
+    <li><code>updateRow</code> – оновити значення в цілому рядку</li>
+    <li><code>deleteColumn</code> – видалити стовпець за назвою</li>
+  </ul>
+
+  <form id="controlForm">
+    <label>
+      📌 <strong>Дія (action):</strong><br>
+      <input type="text" name="action" value="addColumn" required style="width: 100%;">
+    </label><br><br>
+
+    <label>
+      🗂 <strong>Назва аркуша (sheetName):</strong><br>
+      <input type="text" name="sheetName" value="Лист1" required style="width: 100%;">
+    </label><br><br>
+
+    <label>
+      🛠 <strong>Параметри (JSON):</strong><br>
+      <textarea name="params" rows="8" style="width: 100%;">{
+  "columnName": "Персональний сайт"
+}</textarea>
+    </label><br><br>
+
+    <button type="submit">🚀 Надіслати запит</button>
+  </form>
+
+  <div id="result" style="margin-top: 20px; white-space: pre-wrap;"></div>
+
+  <script>
+    const form = document.getElementById('controlForm');
+    const resultBox = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const action = form.action.value.trim();
+      const sheetName = form.sheetName.value.trim();
+      let params;
+      try {
+        params = JSON.parse(form.params.value);
+      } catch (err) {
+        resultBox.textContent = '❌ Помилка в JSON параметрах: ' + err.message;
+        return;
+      }
+
+      const payload = {
+        action,
+        sheetName,
+        params
+      };
+
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwHSdL7NGw70GlrciuSbwxiPxAgGttqDf9AFpRbQKTszeRM3hC73_vAyQjd9CkjAWiiIA/exec", {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const json = await res.json();
+        resultBox.textContent = json.success ? '✅ Успіх:\n' + JSON.stringify(json.result, null, 2) : '❌ Помилка:\n' + json.error;
+      } catch (err) {
+        resultBox.textContent = '❌ Помилка при запиті: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
